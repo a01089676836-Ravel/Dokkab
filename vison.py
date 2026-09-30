@@ -12,8 +12,8 @@ led_r = OutputPin(7)    # 빨강: 비상정지
 led_y = OutputPin(15)   # 노랑: 경고
 led_g = OutputPin(32)   # 초록: 정상 작동
 
-in1 = OutputPin(29)     # 모터 드라이버 IN1
-in2 = OutputPin(31)     # 모터 드라이버 IN2
+in1 = OutputPin(33)     # 모터 드라이버 IN1
+in2 = OutputPin(29)     # 모터 드라이버 IN2
 
 # 카메라 초기화
 camera = cv2.VideoCapture(0)
