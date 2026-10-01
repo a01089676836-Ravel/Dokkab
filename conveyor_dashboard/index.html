@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>컨베이어 안전 모니터</title>
+  <style>
+    :root { --line:#c9ced6; --line-soft:#e3e6ea; --text:#222; --muted:#666; --head:#f2f3f5;
+            --green:#1e8a4c; --yellow:#b07800; --red:#c62828; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#fff; color:var(--text); font:14px/1.5 "Malgun Gothic","Apple SD Gothic Neo",sans-serif; }
+    button { font:inherit; font-size:13px; cursor:pointer; border:1px solid #a9afb8; border-radius:3px; background:#f7f7f7; color:var(--text); padding:4px 10px; }
+    button:hover { background:#eceef1; }
+    button:disabled { color:#999; cursor:default; background:#f7f7f7; }
+    button:focus-visible { outline:2px solid #3b6fd8; outline-offset:1px; }
+    [hidden] { display:none!important; }
+
+    header { display:flex; align-items:center; gap:12px; padding:8px 16px; border-bottom:1px solid var(--line); background:var(--head); }
+    header h1 { margin:0; font-size:17px; font-weight:bold; }
+    header .device { color:var(--muted); font-size:12px; }
+    header .right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+    #clock { font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; margin-right:6px; }
+    .pill { font-size:12px; color:var(--muted); }
+    .pill .dot { display:inline-block; width:8px; height:8px; background:#999; margin-right:4px; vertical-align:0; }
+    .pill.connected .dot { background:var(--green); }
+    #dbToggle[aria-pressed="true"] { background:#e7f4ec; border-color:#7fb895; color:var(--green); }
+    #dbToggle[aria-pressed="false"] { background:#f1f1f1; color:var(--muted); }
+    #shutdownServer { color:var(--red); border-color:#d89a9a; }
+
+    main { padding:14px 16px; }
+    .layout { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(380px,1fr); gap:16px; align-items:start; }
+    .box { border:1px solid var(--line); }
+    .box-title { display:flex; align-items:center; gap:8px; padding:6px 10px; background:var(--head); border-bottom:1px solid var(--line); }
+    .box-title h2 { margin:0; font-size:14px; }
+    .box-title .note { margin-left:auto; font-size:12px; color:var(--muted); }
+
+    .camera { position:relative; aspect-ratio:4/3; background:#222; }
+    #cameraVideo,#cameraImage { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+    .camera-empty { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#ccc; text-align:center; padding:20px; gap:4px; }
+    .camera-empty strong { font-weight:normal; font-size:15px; }
+    .camera-empty p { margin:0; font-size:12px; color:#999; }
+    .camera-tag { position:absolute; left:8px; top:8px; background:rgba(0,0,0,.55); color:#fff; font-size:12px; padding:1px 6px; }
+    .camera-controls { display:flex; align-items:center; gap:6px; padding:6px 10px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); }
+    .camera-controls #cameraState { margin-left:auto; }
+
+    .status { display:flex; align-items:baseline; gap:10px; margin-top:10px; padding:8px 10px; border:1px solid var(--line); border-left:6px solid #999; }
+    .status-icon { display:none; }
+    .status h3 { margin:0; font-size:16px; white-space:nowrap; }
+    .status p { margin:0; color:#333; }
+    #statusMeta { display:block; color:var(--muted); font-size:12px; }
+    .status.normal { border-left-color:var(--green); } .status.normal h3 { color:var(--green); }
+    .status.warning { border-left-color:#e0a800; background:#fffbea; } .status.warning h3 { color:var(--yellow); }
+    .status.danger, .status.error { border-left-color:var(--red); background:#fdf0f0; }
+    .status.danger h3, .status.error h3 { color:var(--red); }
+    .legend { margin:6px 0 0; font-size:12px; color:var(--muted); }
+
+    details { margin-top:12px; font-size:13px; color:var(--muted); }
+    summary { cursor:pointer; }
+    .demo-controls { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+    .demo-note { margin:4px 0 0; font-size:12px; }
+
+    .toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:4px; padding:6px 10px; border-bottom:1px solid var(--line); font-size:13px; }
+    .toolbar button[aria-pressed="true"] { background:#dfe6f2; border-color:#7d93b8; }
+    .counts { margin-left:auto; color:var(--muted); font-size:12px; }
+    .counts b { color:var(--text); font-weight:normal; }
+    .counts .yellow { color:var(--yellow); } .counts .red { color:var(--red); }
+    .log-wrap { max-height:560px; overflow:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { position:sticky; top:0; background:var(--head); text-align:left; font-weight:normal; color:var(--muted); padding:5px 8px; border-bottom:1px solid var(--line); }
+    td { padding:6px 8px; border-bottom:1px solid var(--line-soft); vertical-align:top; }
+    tbody tr:nth-child(even) td { background:#fafbfc; }
+    td.date, td.time { white-space:nowrap; font-variant-numeric:tabular-nums; }
+    td.level { white-space:nowrap; }
+    .log-badge.normal { color:var(--green); } .log-badge.stopped { color:#555; } .log-badge.warning { color:var(--yellow); font-weight:bold; }
+    .log-badge.danger, .log-badge.error { color:var(--red); font-weight:bold; }
+    .log-description { margin:0; overflow-wrap:anywhere; }
+    .stop-reason { margin:2px 0 0; font-size:12px; color:var(--red); }
+    td.empty { padding:40px 8px; text-align:center; color:var(--muted); }
+    td.empty strong { display:block; color:#444; font-weight:normal; }
+    .log-footer { padding:5px 10px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); }
+    .notice { margin:10px 0 0; font-size:12px; color:var(--muted); }
+    footer { margin-top:16px; padding-top:8px; border-top:1px solid var(--line-soft); font-size:12px; color:#888; }
+
+    @media (max-width:900px) { .layout { grid-template-columns:1fr; } header { flex-wrap:wrap; } header .right { margin-left:0; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>컨베이어 안전 모니터</h1>
+    <span class="device">장치: <span id="deviceName">Jetson Orin Nano</span></span>
+    <div class="right">
+      <time id="clock"></time>
+      <span id="dbBadge" class="pill"><i class="dot"></i><span id="dbText">DB 확인 중</span></span>
+      <button id="dbToggle" aria-pressed="true">DB 연동 켜짐</button>
+      <button id="shutdownServer">대시보드 종료</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="layout">
+      <section>
+        <div class="box">
+          <div class="box-title"><h2>카메라</h2></div>
+          <div class="camera">
+            <video id="cameraVideo" autoplay playsinline muted hidden></video>
+            <img id="cameraImage" alt="Jetson 카메라 영상" hidden>
+            <div id="cameraEmpty" class="camera-empty"><strong id="cameraMessage">카메라 연결을 기다리고 있습니다</strong><p>Jetson에서 app.py --vision 으로 실행하면 영상이 나옵니다.</p></div>
+            <span id="cameraTag" class="camera-tag">영상 없음</span>
+          </div>
+          <div class="camera-controls">
+            <button id="connectCamera">이 PC 카메라 연결</button>
+            <button id="disconnectCamera" disabled>영상 끊기</button>
+            <span id="cameraState">연결 대기</span>
+          </div>
+        </div>
+
+        <div id="statusCard" class="status" role="status" aria-live="polite">
+          <span id="statusIcon" class="status-icon"></span>
+          <h3 id="statusTitle">상태 확인 대기</h3>
+          <div><p id="statusReason">아직 기록된 이벤트가 없습니다.</p><time id="statusMeta"></time></div>
+        </div>
+        <p class="legend">정상(초록): 벨트 작동 · 경고(노랑, 200cm 이하): 벨트 작동 + 파랑 LED · 위험(빨강, 50cm 이하): 벨트 정지</p>
+
+        <details>
+          <summary>화면 시연 (DB에 저장 안 됨)</summary>
+          <div class="demo-controls">
+            <button data-demo="NORMAL">정상</button><button data-demo="WARNING">경고</button>
+            <button data-demo="DANGER">위험</button><button data-demo="ERROR">오류</button>
+            <button id="exitDemo">실제 기록으로 돌아가기</button>
+          </div>
+          <p class="demo-note">화면에서만 바뀝니다. 장비는 움직이지 않습니다.</p>
+        </details>
+      </section>
+
+      <section class="box" aria-labelledby="logsTitle">
+        <div class="box-title"><h2 id="logsTitle">이벤트 기록</h2><span class="note">최신 기록이 위</span></div>
+        <div class="toolbar" role="group" aria-label="로그 필터">
+          <button data-filter="ALL" aria-pressed="true">전체</button>
+          <button data-filter="WARNING" aria-pressed="false">경고</button>
+          <button data-filter="DANGER" aria-pressed="false">위험</button>
+          <button data-filter="ERROR" aria-pressed="false">오류</button>
+          <button id="refreshLogs">새로고침</button>
+          <span class="counts">전체 <b id="totalCount">0</b> · 경고 <b id="warningCount" class="yellow">0</b> · 정지 <b id="stopCount" class="red">0</b></span>
+        </div>
+        <div class="log-wrap">
+          <table>
+            <thead><tr><th>날짜</th><th>시간</th><th>상태</th><th>내용</th></tr></thead>
+            <tbody id="logList" aria-live="off"><tr><td class="empty" colspan="4"><strong>기록을 불러오는 중입니다</strong></td></tr></tbody>
+          </table>
+        </div>
+        <div id="logFooter" class="log-footer">한국 시각 · 최근 100건 · 5초마다 갱신</div>
+      </section>
+    </div>
+    <p id="connectionNotice" class="notice" role="status"></p>
+    <footer>비전 AI 기반 컨베이어 작업자 접근 감지 · Jetson Orin Nano + Aiven MySQL</footer>
+  </main>
+  <script src="dashboard.js"></script>
+</body>
+</html>

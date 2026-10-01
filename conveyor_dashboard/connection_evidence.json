@@ -1,0 +1,47 @@
+{
+  "checked_at_utc": "2026-09-30T05:05:00.470835+00:00",
+  "source_file": "C:\\Users\\wjswh\\Downloads\\RYG_face_distance_detection\\RYG_face_distance_detection.py",
+  "source_sha256": "0031b1b6c7228705b9dc45b7f0a8039f551d87317e875e50c5c191ff37b7e0d8",
+  "original_unchanged": true,
+  "jetson_deployment": "/home/jetson/conveyor_dashboard_20260930",
+  "aiven_table": "conveyor_event_logs",
+  "live_api_ok": true,
+  "database_count": 3,
+  "api_count": 3,
+  "latest_event": {
+    "id": 3,
+    "event_id": "d9480126-d0cb-43af-8304-ec3f58b33be4",
+    "device_id": "jetson-orin-nano-01",
+    "occurred_at_utc": "2026-09-30T04:57:57.769+00:00",
+    "event_date": "2026-09-30",
+    "event_time": "13:57:57.769",
+    "severity": "ERROR",
+    "event_description": "비전 처리 중단 · 카메라 0번을 열 수 없습니다. 연결 상태를 확인하세요.",
+    "equipment_stopped": null,
+    "stop_reason": null,
+    "received_at_utc": "2026-09-30T04:57:57.792000+00:00"
+  },
+  "latest_event_matches_api": true,
+  "python_syntax_check": "passed",
+  "javascript_syntax_check": "passed",
+  "camera_connected": false,
+  "hardware_adapter_enabled": false,
+  "physical_led_dc_motor_verified": false,
+  "hardware": {
+    "driver": "L9110S",
+    "motor_type": "DC conveyor motor",
+    "numbering": "GPIO.BOARD",
+    "pins": {
+      "red_led": 31,
+      "blue_led": 15,
+      "A1A": 33,
+      "A1B": 29
+    },
+    "source": "User-confirmed driver and supplied wiring code",
+    "physical_operation_checked": false
+  },
+  "hardware_reference_sha256": {
+    "reference\\circuit_layout.png": "5e1c9cf8003bc7256498f3bc51a7145d6f9c300f03bcd56358f5515385752ed9",
+    "reference\\L9110S_wiring_reference.txt": "6555007de6340468b99738a9eab94be262c0e4928690e81e72dda3df18831f0e"
+  }
+}
