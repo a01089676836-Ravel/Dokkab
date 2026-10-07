@@ -8,6 +8,39 @@
 - 출력 장치는 빨강·경고·초록 LED와 **L9110S DC 벨트 모터**입니다. BOARD 핀은 빨강 15, 경고 31, 초록 32, 모터 입력 33·29입니다 (rail.py와 동일).
 - DB에는 영상이나 얼굴 사진을 업로드하지 않습니다. 문자 이벤트만 기록합니다.
 
+## 원격 접속과 로그 검색 (2026-10-06 추가)
+
+현재는 저장소 루트의 `convey_vision.py` 하나로 비전·제어·기록·대시보드를 함께 실행합니다(`cd ~/Dokkab && conveyor_dashboard/.venv/bin/python convey_vision.py`). `launcher.py`로 실행하면(`cd ~/Dokkab && conveyor_dashboard/.venv/bin/python conveyor_dashboard/launcher.py`) "대시보드 종료" 뒤에도 같은 주소를 새로고침해 비밀번호를 넣고 [다시 시작]으로 다시 켤 수 있습니다.
+
+### 다른 곳에서 접속
+
+| 방법 | 주소 | 준비 |
+|---|---|---|
+| Jetson 안 | `http://127.0.0.1:5080` | 없음 |
+| 같은 Wi-Fi의 PC·휴대폰 | `http://<Jetson IP>:5080` (예: `http://192.168.11.51:5080`) | 없음 (`convey_vision.py`의 `WEB_HOST = '0.0.0.0'`) |
+| 인터넷 어디서나 | `https://….trycloudflare.com` | 다른 터미널에서 `./start_tunnel.sh` 실행 → 출력된 주소 사용, `Ctrl+C`로 닫기 |
+
+- 인터넷 주소는 Cloudflare의 계정 없는 임시 터널(quick tunnel)이라 **켤 때마다 바뀝니다.** 고정 주소는 Cloudflare 계정과 도메인이 필요합니다.
+- 터널 실행 파일 `cloudflared`는 Jetson의 `~/tools/cloudflared`에 파일 하나로 둡니다(설치·시스템 설정 변경 없음). Jetson(arm64) 전용이라 저장소에는 넣지 않습니다. 없으면 아래 명령으로 받습니다.
+
+```bash
+mkdir -p ~/tools && curl -fL -o ~/tools/cloudflared   https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 && chmod +x ~/tools/cloudflared
+```
+
+- **비밀번호:** 영상·로그 보기는 로그인 없이 열립니다. `.env`에 `DASHBOARD_PASSWORD=<비밀번호>`가 있으면 **종료·DB 연동 버튼을 누를 때만** 비밀번호 입력 창이 뜹니다(맞히면 새로고침 전까지 다시 묻지 않음). 비워 두면 주소를 아는 누구나 종료 버튼으로 벨트를 멈출 수 있으니 반드시 넣습니다. Jetson `.env`의 사본은 `jetson_env.txt`(보기용, Git 제외)에 있습니다.
+- 영상은 공개되므로 화면에 찍힌 얼굴이 주소를 아는 사람에게 보입니다. 같은 Wi-Fi의 `http` 접속에서는 버튼 비밀번호가 암호화되지 않고 오갑니다. 인터넷 주소는 `https`입니다.
+- 기존 방식인 SSH 터널(아래 "설치와 DB 설정")도 그대로 쓸 수 있습니다.
+
+### 로그 기간 검색
+
+로그 표 위 **기간** 줄에서 [오늘]·[1주]·[1개월]·[3개월]을 누르면 오늘까지의 기간이 달력 칸에 채워지고 바로 검색됩니다. 달력으로 시작·끝 날짜를 직접 고른 뒤 [검색]을 눌러도 됩니다. [최근]은 최근 100건으로 돌아갑니다. 기간 안 전체 건수를 보여 주고, 표에는 최신 500건까지 표시합니다.
+
+API: `GET /api/v1/logs?limit=500&from=YYYY-MM-DD&to=YYYY-MM-DD` (한국 날짜, 양 끝 포함). 자세한 내용은 [DB 구조](../docs/05_DB_구조.md) 4.1절.
+
+### LED
+
+경고 LED는 파랑에서 **노랑**으로 교체했습니다(같은 31번 핀, 2026-10-06). 현재 배선은 `convey_vision.py` 맨 위 주석이 기준입니다. 이 문서 아래쪽의 핀 설명(초록 32, 모터 29 등)과 `hardware_integration.md`는 초기 배선 기록입니다.
+
 ## 원본에서 반영한 기준
 
 입력: `C:\Users\wjswh\Downloads\RYG_face_distance_detection\RYG_face_distance_detection.py`

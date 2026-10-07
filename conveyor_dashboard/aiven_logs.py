@@ -131,14 +131,33 @@ def insert_event(event):
         """, values)
 
 
-def read_events(limit=100, device_id=None):
+def _event_filter(device_id=None, start_utc=None, end_utc=None):
+    """장치와 기간(start 이상, end 미만, UTC) 조건을 SQL WHERE 절로 만듭니다."""
+    conditions, params = [], []
+    if device_id:
+        conditions.append("device_id = %s"); params.append(device_id)
+    if start_utc:
+        conditions.append("occurred_at_utc >= %s"); params.append(start_utc.replace(tzinfo=None))
+    if end_utc:
+        conditions.append("occurred_at_utc < %s"); params.append(end_utc.replace(tzinfo=None))
+    return (" WHERE " + " AND ".join(conditions) if conditions else ""), params
+
+
+def count_events(device_id=None, start_utc=None, end_utc=None):
+    """기간 검색 결과가 모두 몇 건인지 셉니다. 화면에는 최신 일부만 보여 줍니다."""
+    where, params = _event_filter(device_id, start_utc, end_utc)
+    with mysql_connection() as db, db.cursor() as cursor:
+        cursor.execute("SELECT COUNT(*) AS total FROM conveyor_event_logs" + where, params)
+        return cursor.fetchone()["total"]
+
+
+def read_events(limit=100, device_id=None, start_utc=None, end_utc=None):
     """도착 순서가 아니라 실제 발생 시각이 최신인 로그를 위에 표시합니다."""
     limit = max(1, min(int(limit), 500))
-    where = " WHERE device_id = %s" if device_id else ""
-    params = (device_id, limit) if device_id else (limit,)
+    where, params = _event_filter(device_id, start_utc, end_utc)
     with mysql_connection() as db, db.cursor() as cursor:
         cursor.execute("SELECT * FROM conveyor_event_logs" + where +
-                       " ORDER BY occurred_at_utc DESC, id DESC LIMIT %s", params)
+                       " ORDER BY occurred_at_utc DESC, id DESC LIMIT %s", (*params, limit))
         rows = cursor.fetchall()
     for row in rows:
         moment = row["occurred_at_utc"].replace(tzinfo=timezone.utc)

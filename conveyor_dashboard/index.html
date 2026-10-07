@@ -34,7 +34,7 @@
     .box-title h2 { margin:0; font-size:14px; }
     .box-title .note { margin-left:auto; font-size:12px; color:var(--muted); }
 
-    .camera { position:relative; aspect-ratio:4/3; background:#222; }
+    .camera { position:relative; height:clamp(240px, calc(100vh - 360px), 75vw); background:#222; }
     #cameraVideo,#cameraImage { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
     .camera-empty { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#ccc; text-align:center; padding:20px; gap:4px; }
     .camera-empty strong { font-weight:normal; font-size:15px; }
@@ -54,6 +54,14 @@
     .status.danger h3, .status.error h3 { color:var(--red); }
     .legend { margin:6px 0 0; font-size:12px; color:var(--muted); }
 
+    .signal { display:flex; justify-content:center; gap:36px; margin-top:8px; padding:8px 16px; background:#2b2f36; border-radius:10px; }
+    .signal-item { display:flex; flex-direction:column; align-items:center; gap:4px; color:#d5d8dd; font-size:13px; text-align:center; }
+    .signal-item small { color:#9aa0a8; font-size:11px; }
+    .lamp { width:44px; height:44px; border-radius:50%; border:2px solid #1c1f24; opacity:.25; }
+    .lamp.red { background:#e53935; } .lamp.yellow { background:#fbc02d; } .lamp.green { background:#43a047; }
+    .lamp.on { opacity:1; }
+    .lamp.red.on { box-shadow:0 0 18px #e53935; } .lamp.yellow.on { box-shadow:0 0 18px #fbc02d; } .lamp.green.on { box-shadow:0 0 18px #43a047; }
+
     details { margin-top:12px; font-size:13px; color:var(--muted); }
     summary { cursor:pointer; }
     .demo-controls { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
@@ -64,7 +72,10 @@
     .counts { margin-left:auto; color:var(--muted); font-size:12px; }
     .counts b { color:var(--text); font-weight:normal; }
     .counts .yellow { color:var(--yellow); } .counts .red { color:var(--red); }
-    .log-wrap { max-height:560px; overflow:auto; }
+    .range { background:#fafbfc; }
+    .range-label { color:var(--muted); font-size:12px; margin-right:2px; }
+    .range input[type="date"] { font:inherit; font-size:13px; border:1px solid #a9afb8; border-radius:3px; padding:2px 4px; color:var(--text); }
+    .log-wrap { max-height:calc(100vh - 215px); overflow:auto; }
     table { width:100%; border-collapse:collapse; font-size:13px; }
     th { position:sticky; top:0; background:var(--head); text-align:left; font-weight:normal; color:var(--muted); padding:5px 8px; border-bottom:1px solid var(--line); }
     td { padding:6px 8px; border-bottom:1px solid var(--line-soft); vertical-align:top; }
@@ -119,7 +130,13 @@
           <h3 id="statusTitle">상태 확인 대기</h3>
           <div><p id="statusReason">아직 기록된 이벤트가 없습니다.</p><time id="statusMeta"></time></div>
         </div>
-        <p class="legend">정상(초록): 벨트 작동 · 경고(노랑, 200cm 이하): 벨트 작동 + 파랑 LED · 위험(빨강, 50cm 이하): 벨트 정지</p>
+        <p class="legend">정상(초록): 벨트 작동 · 경고(노랑, 200cm 이하): 벨트 작동 + 노랑 LED · 위험(빨강, 50cm 이하): 벨트 정지</p>
+
+        <div class="signal" aria-label="현재 상태 신호등">
+          <div class="signal-item"><span id="lampRed" class="lamp red"></span>위험 · 정지</div>
+          <div class="signal-item"><span id="lampYellow" class="lamp yellow"></span>경고 · 작동<small>브레드보드 노랑 LED</small></div>
+          <div class="signal-item"><span id="lampGreen" class="lamp green"></span>정상 · 작동</div>
+        </div>
 
         <details>
           <summary>화면 시연 (DB에 저장 안 됨)</summary>
@@ -141,6 +158,16 @@
           <button data-filter="ERROR" aria-pressed="false">오류</button>
           <button id="refreshLogs">새로고침</button>
           <span class="counts">전체 <b id="totalCount">0</b> · 경고 <b id="warningCount" class="yellow">0</b> · 정지 <b id="stopCount" class="red">0</b></span>
+        </div>
+        <div class="toolbar range" role="group" aria-label="기간 검색">
+          <span class="range-label">기간</span>
+          <button data-range="live" aria-pressed="true">최근</button>
+          <button data-range="today" aria-pressed="false">오늘</button>
+          <button data-range="7d" aria-pressed="false">1주</button>
+          <button data-range="1m" aria-pressed="false">1개월</button>
+          <button data-range="3m" aria-pressed="false">3개월</button>
+          <input type="date" id="rangeFrom" aria-label="시작 날짜"> ~ <input type="date" id="rangeTo" aria-label="끝 날짜">
+          <button id="rangeSearch">검색</button>
         </div>
         <div class="log-wrap">
           <table>

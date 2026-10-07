@@ -2,19 +2,41 @@
 
 import argparse
 import atexit
+import hmac
 import os
 import signal
 import threading
-from datetime import datetime, timezone
+from urllib.parse import unquote
+from datetime import datetime, timedelta, timezone
 
 import pymysql
 from flask import Flask, Response, jsonify, request, send_from_directory
 
-from aiven_logs import ConfigurationError, ROOT, read_events
+from aiven_logs import KST, ConfigurationError, ROOT, count_events, read_events
 
 app = Flask(__name__, static_folder=None)
 vision = None
 db_enabled = True  # HTML의 DB 연동 버튼 상태. 서버를 다시 켜면 켜짐으로 시작합니다.
+
+
+def control_allowed():
+    """종료·DB 버튼은 .env의 DASHBOARD_PASSWORD를 확인합니다. 영상·로그 보기는 비밀번호 없이 열립니다."""
+    password = os.getenv("DASHBOARD_PASSWORD", "")
+    given = unquote(request.headers.get("X-Dashboard-Password", ""))
+    return not password or hmac.compare_digest(given.encode(), password.encode())
+
+
+def password_required():
+    return jsonify(ok=False, error="비밀번호가 맞지 않습니다.", need_password=True), 401
+
+
+def kst_day(text, name):
+    """'YYYY-MM-DD'(한국 날짜)를 그날 0시 UTC 시각으로 바꿉니다."""
+    try:
+        day = datetime.strptime(text, "%Y-%m-%d")
+    except ValueError:
+        raise ValueError(f"{name}은 YYYY-MM-DD 형식이어야 합니다.") from None
+    return day.replace(tzinfo=KST).astimezone(timezone.utc)
 
 
 @app.get("/")
@@ -58,12 +80,22 @@ def logs():
         limit = max(1, min(int(request.args.get("limit", "100")), 500))
     except ValueError:
         return jsonify(ok=False, error="limit은 숫자여야 합니다."), 400
+    # 기간 검색: from~to(한국 날짜, 양 끝 포함). 비우면 그쪽은 제한하지 않습니다.
+    try:
+        start = kst_day(request.args["from"], "from") if request.args.get("from") else None
+        end = kst_day(request.args["to"], "to") + timedelta(days=1) if request.args.get("to") else None
+    except ValueError as exc:
+        return jsonify(ok=False, error=str(exc)), 400
+    if start and end and start >= end:
+        return jsonify(ok=False, error="시작 날짜가 끝 날짜보다 늦습니다."), 400
     if not db_enabled:
         return jsonify(ok=False, db_enabled=False, error="DB 연동이 꺼져 있습니다.")
     try:
         # 이 Jetson의 로그만 조회합니다. 다른 장치의 오래된 이벤트와 섞지 않습니다.
-        items = read_events(limit, os.getenv("DEVICE_ID", "jetson-orin-nano-01"))
-        return jsonify(ok=True, count=len(items), items=items,
+        device = os.getenv("DEVICE_ID", "jetson-orin-nano-01")
+        items = read_events(limit, device, start, end)
+        total = count_events(device, start, end) if start or end else None
+        return jsonify(ok=True, count=len(items), total=total, items=items,
                        fetched_at_utc=datetime.now(timezone.utc).isoformat())
     except ConfigurationError as exc:
         return jsonify(ok=False, error=str(exc), configured=False), 503
@@ -82,6 +114,8 @@ def db_toggle():
     global db_enabled
     if request.headers.get('X-Dashboard-Action') != 'db-toggle':
         return jsonify(ok=False, error='허용되지 않은 요청입니다.'), 403
+    if not control_allowed():
+        return password_required()
     body = request.get_json(silent=True) or {}
     if not isinstance(body.get('enabled'), bool):
         return jsonify(ok=False, error='enabled는 true 또는 false여야 합니다.'), 400
@@ -100,6 +134,8 @@ def shutdown():
     # 다른 사이트가 보낸 요청은 이 헤더를 붙일 수 없어 거절됩니다.
     if request.headers.get('X-Dashboard-Action') != 'shutdown':
         return jsonify(ok=False, error='허용되지 않은 요청입니다.'), 403
+    if not control_allowed():
+        return password_required()
     # 응답을 먼저 보낸 뒤, stop_jetson.py와 같은 SIGTERM 경로로 모터/LED/핀/카메라를 해제하고 종료합니다.
     threading.Timer(0.5, os.kill, (os.getpid(), signal.SIGTERM)).start()
     return jsonify(ok=True)

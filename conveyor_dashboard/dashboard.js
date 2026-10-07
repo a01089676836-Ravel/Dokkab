@@ -2,6 +2,8 @@
 const $ = (id) => document.getElementById(id);
 const names = { NORMAL: '정상', WARNING: '경고', DANGER: '위험', ERROR: '오류' };
 let records = [], demoRecords = [], demo = false, filter = 'ALL', fetching = false;
+let range = null; // 기간 검색 { from, to } (한국 날짜). null이면 최근 100건
+let dbVersion = 0; // DB 버튼을 누를 때마다 늘립니다. 누르기 전에 보낸 로그 응답은 버튼 상태를 바꾸지 않습니다.
 let cameraStream = null, liveState = null, visionEnabled = false, jetsonSource = '', cameraManuallyStopped = false;
 
 function kstParts(moment) {
@@ -26,7 +28,15 @@ function emptyMessage(title, message) {
   cell.append(strong, message); row.append(cell); $('logList').replaceChildren(row);
 }
 
+// 신호등: 현재 상태에 맞는 불 하나만 켠다. 프로그램 종료(정상+정지)와 오류는 모두 끈다.
+function setSignal(event) {
+  const lit = !event || (event.severity === 'NORMAL' && event.equipment_stopped === true) ? null
+    : { DANGER: 'lampRed', WARNING: 'lampYellow', NORMAL: 'lampGreen' }[event.severity];
+  ['lampRed', 'lampYellow', 'lampGreen'].forEach((id) => $(id).classList.toggle('on', id === lit));
+}
+
 function showStatus(event) {
+  setSignal(event);
   const card = $('statusCard'); card.className = 'status';
   if (!event) {
     $('statusIcon').textContent = '—'; $('statusTitle').textContent = '상태 확인 대기';
@@ -51,7 +61,8 @@ function render() {
   showStatus(!demo && liveState ? liveState : items[0]);
   const visible = items.filter((e) => filter === 'ALL' || e.severity === filter);
   if (!visible.length) {
-    emptyMessage('표시할 기록이 없습니다', items.length ? '선택한 상태의 이벤트가 없습니다.' : '젯슨에서 발생한 날짜·시간과 이벤트 설명이 여기에 표시됩니다.');
+    emptyMessage('표시할 기록이 없습니다', items.length ? '선택한 상태의 이벤트가 없습니다.'
+      : range && !demo ? '선택한 기간에 기록된 이벤트가 없습니다.' : '젯슨에서 발생한 날짜·시간과 이벤트 설명이 여기에 표시됩니다.');
     return;
   }
   const fragment = document.createDocumentFragment();
@@ -84,10 +95,13 @@ function render() {
 async function loadLogs() {
   if (demo || fetching || location.protocol === 'file:') return;
   fetching = true;
+  const asked = range, askedDb = dbVersion;
   try {
-    const response = await fetch('/api/v1/logs?limit=100', { cache: 'no-store', signal: AbortSignal.timeout(10000) });
+    const query = asked ? `limit=500&from=${asked.from}&to=${asked.to}` : 'limit=100';
+    const response = await fetch(`/api/v1/logs?${query}`, { cache: 'no-store', signal: AbortSignal.timeout(10000) });
     const data = await response.json();
-    if (demo) return;
+    // 응답을 기다리는 사이 기간이 바뀌거나 DB 버튼을 눌렀으면 버립니다(finally에서 다시 불러옴).
+    if (demo || asked !== range || askedDb !== dbVersion) return;
     if (data.db_enabled === false) {
       showDbToggle(false);
       $('dbBadge').className = 'pill'; $('dbText').textContent = 'DB 연동 꺼짐';
@@ -98,9 +112,12 @@ async function loadLogs() {
     }
     if (!response.ok || !data.ok) throw new Error(data.error || 'DB 연결을 확인해 주세요.');
     records = data.items;
+    showDbToggle(true);
     $('dbBadge').className = 'pill connected'; $('dbText').textContent = 'DB 연결됨';
     $('connectionNotice').textContent = 'Aiven MySQL의 발생 시각을 기준으로 최신 기록부터 표시합니다.';
-    $('logFooter').textContent = '한국 시각 · 최근 100건 · 5초마다 갱신';
+    $('logFooter').textContent = !asked ? '한국 시각 · 최근 100건 · 5초마다 갱신'
+      : `한국 시각 · ${asked.from} ~ ${asked.to} · 전체 ${data.total}건`
+        + (data.total > data.count ? ` 중 최신 ${data.count}건 표시` : '') + ' · 5초마다 갱신';
     render();
   } catch (error) {
     if (demo) return;
@@ -110,8 +127,39 @@ async function loadLogs() {
     if (!records.length) {
       showStatus(liveState); emptyMessage('DB 연결을 기다리고 있습니다', '연결되면 실제 이벤트 기록이 여기에 표시됩니다.');
     }
-  } finally { fetching = false; }
+  } finally {
+    fetching = false;
+    if (asked !== range || askedDb !== dbVersion) loadLogs();
+  }
 }
+
+// 기간 검색: 버튼은 오늘까지의 기간을 달력 칸에 채우고, 달력으로 직접 고른 뒤 [검색]도 됩니다.
+const presets = { today: {}, '7d': { days: 6 }, '1m': { months: 1 }, '3m': { months: 3 } };
+function shiftDate(day, { days = 0, months = 0 }) {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() - months); d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+function markRange(key) {
+  document.querySelectorAll('[data-range]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.range === key)));
+}
+document.querySelectorAll('[data-range]').forEach((button) => button.addEventListener('click', () => {
+  const key = button.dataset.range;
+  if (key === 'live') {
+    range = null; $('rangeFrom').value = ''; $('rangeTo').value = '';
+  } else {
+    const to = kstParts(new Date()).date;
+    range = { from: shiftDate(to, presets[key]), to };
+    $('rangeFrom').value = range.from; $('rangeTo').value = range.to;
+  }
+  markRange(key); $('logFooter').textContent = '검색 중…'; loadLogs();
+}));
+$('rangeSearch').addEventListener('click', () => {
+  const from = $('rangeFrom').value, to = $('rangeTo').value;
+  if (!from || !to) { $('connectionNotice').textContent = '시작 날짜와 끝 날짜를 모두 고르세요.'; return; }
+  if (from > to) { $('connectionNotice').textContent = '시작 날짜가 끝 날짜보다 늦습니다.'; return; }
+  range = { from, to }; markRange(null); $('logFooter').textContent = '검색 중…'; loadLogs();
+});
 
 document.querySelectorAll('[data-filter]').forEach((button) => button.addEventListener('click', () => {
   filter = button.dataset.filter;
@@ -170,15 +218,28 @@ function showDbToggle(enabled) {
   $('dbToggle').setAttribute('aria-pressed', String(enabled));
   $('dbToggle').textContent = enabled ? 'DB 연동 켜짐' : 'DB 연동 꺼짐';
 }
+// 종료·DB 버튼은 비밀번호가 필요합니다. 맞힌 비밀번호는 새로고침 전까지만 기억합니다.
+let controlPassword = '';
+async function protectedPost(url, action, body) {
+  for (let attempt = 0; ; attempt++) {
+    const headers = { 'X-Dashboard-Action': action, 'X-Dashboard-Password': encodeURIComponent(controlPassword) };
+    if (body) headers['Content-Type'] = 'application/json';
+    const response = await fetch(url, { method: 'POST', headers, body: body ? JSON.stringify(body) : undefined });
+    if (response.status !== 401) return response;
+    if (attempt === 2) throw new Error('비밀번호가 맞지 않습니다.');
+    const typed = prompt(attempt ? '비밀번호가 틀렸습니다. 다시 입력하세요.' : '이 버튼은 비밀번호가 필요합니다. 대시보드 비밀번호를 입력하세요.');
+    if (typed === null) throw new Error('비밀번호 입력을 취소했습니다.');
+    controlPassword = typed;
+  }
+}
 $('dbToggle').addEventListener('click', async () => {
   const next = $('dbToggle').getAttribute('aria-pressed') !== 'true';
   $('dbToggle').disabled = true;
   try {
-    const response = await fetch('/api/db', { method: 'POST',
-      headers: { 'X-Dashboard-Action': 'db-toggle', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enabled: next }) });
+    const response = await protectedPost('/api/db', 'db-toggle', { enabled: next });
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    dbVersion++;
     showDbToggle(data.enabled);
     if (data.enabled) { $('dbText').textContent = 'DB 확인 중'; $('connectionNotice').textContent = 'DB 연동을 다시 켰습니다.'; }
     loadLogs();
@@ -190,11 +251,11 @@ $('shutdownServer').addEventListener('click', async () => {
   if (!confirm('대시보드 서버를 종료할까요?\n벨트 모터를 멈추고 카메라·GPIO 핀을 해제합니다.\n종료 후 rail_face.py를 실행할 수 있습니다.')) return;
   $('shutdownServer').disabled = true;
   try {
-    const response = await fetch('/api/shutdown', { method: 'POST', headers: { 'X-Dashboard-Action': 'shutdown' } });
+    const response = await protectedPost('/api/shutdown', 'shutdown');
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     stopCamera();
     $('shutdownServer').textContent = '종료됨';
-    $('cameraMessage').textContent = '대시보드 서버를 종료했습니다. 다시 켜려면 Jetson에서 app.py를 실행하세요.';
+    $('cameraMessage').textContent = '프로그램을 종료했습니다. 몇 초 뒤 이 페이지를 새로고침하면 [다시 시작] 버튼이 나옵니다(launcher.py로 실행한 경우).';
   } catch (error) {
     $('shutdownServer').disabled = false;
     alert(`종료 요청 실패: ${error.message}`);
