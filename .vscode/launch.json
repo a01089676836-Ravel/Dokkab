@@ -1,0 +1,23 @@
+{
+  // F5 또는 Ctrl+F5로 실행합니다. (오른쪽 위 ▷ "Run Python File" 버튼은 이 설정을 읽지 않습니다.)
+  // convey_vision.py를 실행하고, "HTML 대시보드: http://...:5080"이 출력되면
+  // VS Code가 5080 포트를 PC로 연결해 PC의 기본 브라우저에 대시보드를 엽니다.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "컨베이어 실행 + 대시보드 열기",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "/home/jetson/Dokkab/convey_vision.py",
+      "cwd": "/home/jetson/Dokkab",
+      "python": "/home/jetson/Dokkab/conveyor_dashboard/.venv/bin/python",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "serverReadyAction": {
+        "pattern": "http://[^\\s:]+:([0-9]+)",
+        "uriFormat": "http://localhost:%s",
+        "action": "openExternally"
+      }
+    }
+  ]
+}

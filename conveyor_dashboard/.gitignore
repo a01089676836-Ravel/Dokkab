@@ -1,0 +1,6 @@
+.env
+ca.pem
+.venv/
+__pycache__/
+*.sqlite3*
+jetson_env.txt

@@ -1,0 +1,2 @@
+# Jetson Orin Nano에서 하드웨어 모듈을 활성화할 때 사용합니다.
+Jetson.GPIO>=2.1.7,<3

@@ -3,14 +3,14 @@
 이 파일 하나만 실행하면 됩니다.
   python3 rail_face1.py
   -> 카메라 + 얼굴 거리 판단 + 벨트/LED 제어 (이 파일)
-  -> HTML 대시보드 http://127.0.0.1:5080 (카메라 화면과 이벤트 기록만 표시)
+  -> HTML 대시보드 http://<Jetson IP>:5080 (카메라 화면과 이벤트 기록만 표시, 같은 Wi-Fi에서 접속)
   -> 이벤트 기록은 Aiven DB에 저장 (HTML의 'DB 연동' 버튼으로 켜고 끔)
 
 동작 요약
   - 카메라로 얼굴을 찾고, 얼굴 박스 높이로 거리를 추정합니다.
   - 가장 가까운 얼굴의 거리로 상태를 정합니다.
       green  : 200cm 초과 또는 얼굴 없음  -> 벨트 작동
-      yellow : 50cm 초과 ~ 200cm 이하      -> 벨트 작동 유지 + 파랑 LED (경고만)
+      yellow : 50cm 초과 ~ 200cm 이하      -> 벨트 작동 유지 + 노랑 LED (경고만)
       red    : 50cm 이하                   -> 벨트 정지 + 빨강 LED
   - 위험해지는 쪽(green -> yellow -> red)은 즉시 바뀝니다.
     안전해지는 쪽(red -> yellow -> green)은 RELEASE_SECONDS 동안 계속 유지될 때만 바뀝니다.
@@ -22,7 +22,7 @@
   1번  -> 모터 드라이버 VCC
   9번  -> 모터 드라이버 GND
   15번 -> 빨강 LED
-  31번 -> 파랑 LED (경고)
+  31번 -> 노랑 LED (경고)
   33번 -> 모터 드라이버 B-1A
   B-1B -> 연결 안 됨 (L9110S 모듈에서는 연결 안 된 입력이 HIGH로 유지됨)
 
@@ -63,7 +63,7 @@ MODEL_URL = 'https://huggingface.co/opencv/face_detection_yunet/resolve/main/' +
 
 # 핀 번호 (BOARD 기준, 위 "현재 배선"과 같아야 함)
 PIN_LED_RED = 15     # 빨강 LED: 위험(red)
-PIN_LED_BLUE = 31    # 파랑 LED: 경고(yellow)
+PIN_LED_BLUE = 31    # 노랑 LED: 경고(yellow). 파랑 LED에서 교체, 변수 이름은 그대로 둠
 PIN_MOTOR = 33       # 모터 드라이버 B-1A
 
 # 거리 기준 (cm)
@@ -76,8 +76,8 @@ DISTANCE_CONSTANT = 13000
 # 안전해지는 쪽으로 상태를 바꾸기 전에 기다리는 시간(초)
 RELEASE_SECONDS = 1.0
 
-# HTML 대시보드 주소 (Jetson 안에서만 열림. PC에서는 VS Code 포트 전달이나 SSH 터널로 접속)
-WEB_HOST = '127.0.0.1'
+# HTML 대시보드 주소 (0.0.0.0 = 같은 Wi-Fi의 다른 기기에서도 http://<Jetson IP>:5080 으로 접속)
+WEB_HOST = '0.0.0.0'
 WEB_PORT = 5080
 
 # 상태 이름(화면/LED용)과 대시보드 기록용 이름, 위험 순위
@@ -173,7 +173,7 @@ def set_leds(status):
 
 def apply_status(status):
     """상태에 맞게 벨트와 LED를 함께 바꿉니다. 정지를 LED보다 먼저 적용합니다."""
-    # 빨강(위험)일 때만 멈춥니다. 노랑(경고)은 파랑 LED로 알리기만 하고 벨트는 계속 돕니다.
+    # 빨강(위험)일 때만 멈춥니다. 노랑(경고)은 노랑 LED로 알리기만 하고 벨트는 계속 돕니다.
     if status == 'red':
         stop_motor()
     else:
