@@ -285,7 +285,7 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
 <div class="wrap">
 
 <header class="top">
-  <span class="label">Project dossier · 2026-09-30 → 2026-10-06 · Jetson Orin Nano</span>
+  <span class="label">Project dossier · 2026-09-30 → 2026-10-13 · Jetson Orin Nano</span>
   <h1>비전 AI 컨베이어 작업자 접근 감지 · 문서 11선</h1>
   <p class="lede">카메라로 작업자의 얼굴을 찾고 거리를 추정해, 가까워지면 노랑 LED로 경고하고 50cm 안에서는 컨베이어 벨트를 멈추는 시제품입니다. 계획서부터 개발일지, 최적화 모델과 벤치마크까지 11개 문서를 한 묶음으로 정리했습니다. 문서마다 무엇을 정했는지, 어떤 근거가 있는지, 어디까지 확인했는지를 보여 줍니다.</p>
   <div class="team"><span>과정</span><b>온디바이스 AI 기반 산업용 소프트웨어 개발 1기</b><span>팀</span><b>전종현(팀장) · 송태원 · 장호영</b></div>
@@ -329,11 +329,11 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
       <span class="nm">원격 접속 · 기간 검색 · 평가 · 재시작 · 최적화</span>
       <span class="why">노랑 LED 교체, 인터넷 주소와 버튼 비밀번호, FPS 37 실측, 깜빡임 13.5% 재계산, 종료 후 다시 시작, TensorRT 변환과 전후 벤치마크</span>
     </div>
-    <div class="tl c5 todo">
-      <span class="date">10-08 (예정)</span><span class="node"></span>
-      <span class="co">시연</span>
-      <span class="nm">시연 영상 촬영, 현장 정량 평가</span>
-      <span class="why">줄자 위치에서 Accuracy·F1 측정. 측정한 값만 03 문서에 기록</span>
+    <div class="tl c5">
+      <span class="date">10-13</span><span class="node"></span>
+      <span class="co">현장 정량 평가</span>
+      <span class="nm">줄자 위치 5곳, 300장 측정</span>
+      <span class="why">Accuracy 29.0%, Macro F1 0.311. 다른 사람이 함께 찍힌 위치가 오답 대부분. 거리식이 거리를 약 절반으로 추정함을 발견</span>
     </div>
   </div>
   <p class="flowline">카메라 프레임 → YuNet 얼굴 검출 → 거리 추정(13000 ÷ 상자 높이) → 상태 판단 + 1초 안정화 → LED·벨트 제어 → 로컬 대기함 → Aiven MySQL → HTML 대시보드. 모든 단계가 <span class="mono">convey_vision.py</span> 하나에서 돕니다.</p>
@@ -363,7 +363,7 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
       <thead><tr><th>기준</th><th>내용</th><th>결과</th><th>근거</th></tr></thead>
       <tbody>
         <tr><th>S1</th><td>50cm 이내면 벨트 정지</td><td><span class="pill ok">달성</span></td><td class="ev">DANGER 40건 모두 정지 기록 (10-06 조회)</td></tr>
-        <tr><th>S2</th><td>50~200cm에서 노랑 LED + 벨트 작동</td><td><span class="pill ok">달성</span></td><td class="ev">17:16~17:18 연속 기록 "벨트 작동 유지". 10-08 시연에서 육안 재확인</td></tr>
+        <tr><th>S2</th><td>50~200cm에서 노랑 LED + 벨트 작동</td><td><span class="pill ok">달성</span></td><td class="ev">17:16~17:18 연속 기록 "벨트 작동 유지". 노랑 LED 육안 재확인 완료</td></tr>
         <tr><th>S3</th><td>작업자가 떠나면 벨트 재작동</td><td><span class="pill ok">달성</span></td><td class="ev">DANGER → NORMAL 전환 기록</td></tr>
         <tr><th>S4</th><td>검출이 잠깐 끊겨도 깜빡이지 않음</td><td><span class="pill ok">달성</span></td><td class="ev">1초 미만 반전 81.5% → 13.5% (10-06 재계산, 507건·전환 483회). 남은 빠른 전환은 모두 위험 쪽</td></tr>
         <tr><th>S5</th><td>모든 변경·정지·종료가 DB에 남음</td><td><span class="pill ok">달성</span></td><td class="ev">2,186건 저장 (10-06 조회), 날짜·시간·상태·사유 포함</td></tr>
@@ -374,7 +374,7 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
         <tr><th>추가</th><td>처리 속도 (FPS)</td><td><span class="pill ok">달성</span></td><td class="ev">모델만 36.7~37.1 FPS, 카메라 포함 22.1 FPS (640×480, 15W, 10-06)</td></tr>
         <tr><th>추가</th><td>종료 후 웹에서 다시 시작</td><td><span class="pill ok">달성</span></td><td class="ev"><span class="mono">launcher.py</span>: 종료 → [다시 시작] → 재실행 확인. 틀린 비밀번호 401</td></tr>
         <tr><th>추가</th><td>모델 최적화 (TensorRT)</td><td><span class="pill part">부분</span></td><td class="ev">FP32·FP16 엔진 변환. FP16 1.23배, CPU 558% → 65%, 얼굴 일치 98.0%. 메인 프로그램 미적용 (10·11 문서)</td></tr>
-        <tr><th>추가</th><td>현장 정량 평가 (Accuracy·F1)</td><td><span class="pill todo">예정</span></td><td class="ev">10-08 시연 영상 촬영 때 줄자 위치에서 측정. <span class="mono">evaluate_model.py</span> 준비 완료</td></tr>
+        <tr><th>추가</th><td>현장 정량 평가 (Accuracy·F1)</td><td><span class="pill part">부분</span></td><td class="ev">10-13, 5곳 300장. Accuracy 29.0%, Macro F1 0.311, MAE 89.0cm. 한 명만 찍힌 위치는 50.0%. 70·40·30cm 미측정이라 위험 Recall은 측정 못 함</td></tr>
       </tbody>
     </table>
   </div>
@@ -567,8 +567,8 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
 <article class="case c2" id="d03">
   <div class="case-head">
     <div class="meta"><span class="co">03 · 모델 평가서</span><span class="label">YuNet · OpenCV 4.14.0 · Jetson Orin Nano</span></div>
-    <h3>평가: 공개 지표, 현장 안정성, 측정 예정 지표</h3>
-    <p class="one">공개 지표는 WIDER Face 기준이라 우리 교실 환경의 값이 아닙니다. 현장에서는 상태 깜빡임을 핵심 지표로 쟀고, 정답이 필요한 Accuracy·F1·FPS는 평가 도구를 만들어 측정을 앞두고 있습니다.</p>
+    <h3>평가: 공개 지표, 현장 안정성, 현장 정확도</h3>
+    <p class="one">공개 지표는 WIDER Face 기준이라 우리 교실 환경의 값이 아닙니다. 현장에서는 상태 깜빡임을 핵심 지표로 쟀고, 10-13에 줄자 위치에서 Accuracy·F1을 측정했습니다. 정확도는 낮았지만, 원인이 측정 환경과 거리식 보정에 있다는 것을 데이터로 확인했습니다.</p>
   </div>
   <div class="case-body">
     <div>
@@ -605,12 +605,12 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
         <p class="note">검출 평균 약 27ms(p95 약 32ms). 모델이 카메라(22fps)보다 빨라 속도 한계는 카메라와 화면 표시입니다.</p>
       </div>
       <div class="stats">
-        <div class="stat todo"><b>측정 예정</b><span>Accuracy</span></div>
-        <div class="stat todo"><b>측정 예정</b><span>Macro F1</span></div>
-        <div class="stat todo"><b>측정 예정</b><span>위험(red) Recall</span></div>
-        <div class="stat todo"><b>측정 예정</b><span>거리 오차 MAE</span></div>
+        <div class="stat"><b>29.0%</b><span>Accuracy (300장, 1인 위치만 50.0%)</span></div>
+        <div class="stat"><b>0.311</b><span>Macro F1 (정상·경고)</span></div>
+        <div class="stat todo"><b>측정 못 함</b><span>위험(red) Recall · 위험 프레임 0장</span></div>
+        <div class="stat"><b>89.0cm</b><span>거리 오차 MAE (1인 위치 65.0cm)</span></div>
       </div>
-      <p class="small">이 네 값은 줄자로 잰 위치에 사람이 서야 정답이 생깁니다. 10-08 시연 영상 촬영 때 측정합니다.</p>
+      <p class="small">10-13, 빈 화면·300·250·150·100cm 5곳 × 60장(방이 좁아 70·40·30cm 미측정). 빈 화면·300·250cm에는 측정 대상이 아닌 사람이 함께 찍혀, 시스템이 그 얼굴 기준으로 경고를 냈습니다. 한 명만 찍힌 150·100cm에서는 추정거리가 실제의 0.54배·0.39배로 짧아, 100cm에서도 정지했습니다(안전 쪽 오차). 거리 상수 재보정이 다음 과제입니다.</p>
       <table class="mini">
         <thead><tr><th>지표</th><th>이 프로젝트에서 보는 이유</th></tr></thead>
         <tbody>
@@ -863,8 +863,8 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
       <table class="mini">
         <thead><tr><th>영역</th><th>결과 / 남은 문제</th></tr></thead>
         <tbody>
-          <tr><td>하드웨어</td><td>위험 때 벨트 정지 40/40, 경고 때 작동 유지, 어떤 종료에도 정지 / 노랑 LED 육안 재확인(10-08), B-1B 미연결</td></tr>
-          <tr><td>비전 AI</td><td>정면 얼굴 검출, 모델만 37 FPS, 카메라 포함 22.1 FPS / Accuracy·F1은 10-08 측정</td></tr>
+          <tr><td>하드웨어</td><td>위험 때 벨트 정지 40/40, 경고 때 작동 유지, 어떤 종료에도 정지 / B-1B 미연결</td></tr>
+          <tr><td>비전 AI</td><td>정면 얼굴 검출, 모델만 37~40 FPS, 카메라 포함 22 FPS, 현장 Accuracy 29.0%·F1 0.311 / 거리식이 거리를 약 절반으로 추정(재보정 필요)</td></tr>
           <tr><td>최적화</td><td>TensorRT FP16 1.23배, CPU 558% → 65% / 메인 미적용</td></tr>
           <tr><td>판단·제어</td><td>1초 미만 반전 81.5% → 13.5% / 이동평균 미적용</td></tr>
           <tr><td>DB</td><td>2,186건·정지 105건, 기간 검색 147 = 147 / 인터넷 끊김 시험 안 함</td></tr>
@@ -903,7 +903,7 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
     </ol></div>
     <div class="can"><h4>개선 방향</h4><ol>
       <li>사람 전체 검출 모델(YOLO person 등) 병행</li>
-      <li><span class="mono">evaluate_model.py</span>로 Accuracy·F1 현장 측정, 거리식 재보정</li>
+      <li>거리식 재보정 후, 다른 사람이 없는 상태에서 8개 위치(위험 거리 포함) 재측정</li>
       <li>거리값 이동평균으로 흔들림 감소</li>
       <li>TensorRT FP16 엔진을 메인에 적용해 CPU 여유 확보</li>
       <li>B-1B를 GPIO나 GND에 연결해 배선 확정</li>
@@ -1060,7 +1060,7 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
   <div class="principles">
     <div class="pr c3"><h3>고치기 전에 원인부터</h3><p>오류 메시지를 보고 바로 코드를 고치지 않고 실행 위치, 남은 프로세스, 배선, 케이블을 먼저 확인했습니다.</p><div class="ev"><span>Remote-SSH</span><span>GPIO 점유</span><span>B-1B 미연결</span></div></div>
     <div class="pr c2"><h3>위험 쪽은 즉시, 안전 쪽은 신중하게</h3><p>안전 시스템에서는 비대칭이 중요합니다. 정지는 바로, 재작동은 1초 확인 뒤에 합니다. 이동평균도 같은 이유로 넣지 않았습니다.</p><div class="ev"><span>StatusFilter</span><span>81.5% → 13.5%</span><span>이동평균 미적용</span></div></div>
-    <div class="pr c4"><h3>숫자와 기록으로 말한다</h3><p>정답이 없어 정확도를 못 잰 것은 "측정 예정"으로 남겼습니다. 평가 도구를 만들고, 실제로 측정한 값만 문서에 적습니다.</p><div class="ev"><span>DB 2,186건</span><span>37 FPS 실측</span><span>Accuracy 측정 예정</span></div></div>
+    <div class="pr c4"><h3>숫자와 기록으로 말한다</h3><p>정답이 없을 때는 "측정 예정"으로 남기고, 평가 도구를 만든 뒤 실제로 잰 값만 적었습니다. 낮게 나온 정확도도 그대로 적고, 원인을 데이터로 나눠 설명했습니다.</p><div class="ev"><span>DB 2,186건</span><span>37 FPS 실측</span><span>Accuracy 29.0% 원인 분석</span></div></div>
     <div class="pr c1"><h3>글자보다 동작 표로 확인</h3><p>"경고 시 작동 정지" 같은 문장은 해석이 갈립니다. 상태별 동작을 표로 만들어 확인받는 편이 빨랐습니다.</p><div class="ev"><span>상태별 동작 표</span><span>핀 값 표</span></div></div>
     <div class="pr c5"><h3>여는 것과 막는 것을 같이 정한다</h3><p>원격 접속을 열면서 누가 무엇을 할 수 있는지도 정했습니다. 보기는 열고, 벨트를 멈출 수 있는 버튼만 비밀번호로 막았습니다.</p><div class="ev"><span>보기 자유</span><span>버튼 401</span><span>https 터널</span></div></div>
     <div class="pr c3"><h3>한계는 숨기지 않고 적는다</h3><p>잘 동작하는 코드를 무리하게 바꾸기보다, 모니터 없는 실행 같은 한계를 실행 조건으로 문서에 남겼습니다.</p><div class="ev"><span>종료 코드 134</span><span>표본 39건</span><span>공개 지표 ≠ 현장</span></div></div>
@@ -1069,7 +1069,7 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
 
 <footer>
   <span>출처: <span class="mono">C:\Dokkab\docs</span>의 00_프로젝트계획서_수정본 ~ 08_개발일지, 10_최적화_모델, 11_벤치마크_결과(Markdown)를 요약했습니다. 수치는 각 문서에 적힌 값입니다.</span>
-  <span>FPS, 상태 깜빡임, TensorRT 전후 비교는 2026-10-06에 실제 장비와 DB로 측정했습니다. Accuracy·F1·위험 Recall·MAE는 줄자 위치에 사람이 서야 해서 10-08 시연 영상 촬영 때 측정합니다. 운영 로그의 상태 라벨은 시스템이 추정거리로 붙인 값이며 사람이 확인한 정답이 아닙니다.</span>
+  <span>FPS, 상태 깜빡임, TensorRT 전후 비교는 2026-10-06에 실제 장비와 DB로 측정했습니다. Accuracy·F1·MAE는 2026-10-13에 줄자 위치 5곳(300장)에서 측정했고, 위험 Recall은 위험 거리를 찍지 못해 측정하지 못했습니다. 시연 영상(31초, 대시보드 + 실제 LED·벨트, 자막)은 <span class="mono">demo_video/conveyor_demo.mp4</span>와 발표자료 PPT(18장)에 들어 있습니다. 운영 로그의 상태 라벨은 시스템이 추정거리로 붙인 값이며 사람이 확인한 정답이 아닙니다.</span>
 </footer>
 
 </div>

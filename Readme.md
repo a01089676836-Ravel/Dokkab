@@ -29,9 +29,12 @@ conveyor_dashboard/.venv/bin/python conveyor_dashboard/launcher.py   # 종료 �
 | `convey_vision.py` | 메인 프로그램 (카메라 → 검출 → 판단 → LED·벨트 → DB → 대시보드) |
 | `conveyor_dashboard/` | Flask 대시보드, Aiven DB 기록, HTML 화면 |
 | `evaluate_model.py` | 성능 평가 (Accuracy, Precision/Recall/F1, FPS) |
+| `evaluate_web.py` | 같은 평가를 브라우저 버튼으로 진행 (Jetson에 모니터가 없을 때, `http://<Jetson IP>:5090`) |
+| `eval_results/` | 현장 평가 결과 (`frames.csv`, `metrics.md`) |
 | `yunet_distance_calibration.py` | 정답 거리 보정 데이터 수집 도구 |
 | `RYG_face_distance_detection.py` | 원본 YuNet 거리 표시 코드 |
 | `optimization/` | TensorRT 변환 스크립트·엔진·벤치마크 |
+| `demo_video/` | 시연 영상 |
 | `docs/` | 최종 제출 문서 |
 
 ## 제출 문서
@@ -45,6 +48,8 @@ conveyor_dashboard/.venv/bin/python conveyor_dashboard/launcher.py   # 종료 �
 | [Jetson 실행 코드](docs/04_Jetson_실행코드.md) | 처리 흐름, 배선, 설치·실행 |
 | [DB 구조](docs/05_DB_구조.md) | 테이블, 기록 시점, 조회 방식 |
 | [통합 시연](docs/06_통합_시연.md) | AI 판단 → 장치 반응 → DB 기록 시나리오 |
+| [시연 영상](demo_video/conveyor_demo.mp4) | 31초, 대시보드 + 실제 LED·벨트, 자막 |
+| [발표자료 (PPT)](docs/발표자료.pptx) / [PDF](docs/발표자료.pdf) | 18장, PPT에는 시연 영상 포함 |
 | [결과보고서](docs/07_결과보고서.md) | 결과(영역별 포함), 문제 해결, 한계, 개선 방향 |
 | [최적화 모델](docs/10_최적화_모델.md) | YuNet ONNX → TensorRT FP32·FP16 엔진 변환 절차 (`optimization/`) |
 | [벤치마크 결과](docs/11_벤치마크_결과.md) | 최적화 전후 지연·FPS·CPU·메모리·결과 일치율 |
