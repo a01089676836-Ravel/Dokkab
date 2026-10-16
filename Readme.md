@@ -31,7 +31,7 @@ conveyor_dashboard/.venv/bin/python conveyor_dashboard/launcher.py   # 종료 �
 | `evaluate_model.py` | 성능 평가 (Accuracy, Precision/Recall/F1, FPS) |
 | `evaluate_web.py` | 같은 평가를 브라우저 버튼으로 진행 (Jetson에 모니터가 없을 때, `http://<Jetson IP>:5090`) |
 | `eval_results/` | 현장 평가 결과 (`frames.csv`, `metrics.md`) |
-| `optimization/` | TensorRT 변환 스크립트(`convert_trt.sh`), 빌드 로그, 벤치마크 코드·결과. 엔진 파일은 장비마다 다시 만들어야 해서 저장소에 넣지 않았다 |
+| `optimization/` | TensorRT 엔진(`yunet_fp32.engine`, `yunet_fp16.engine`), 변환 스크립트(`convert_trt.sh`), 빌드 로그, 벤치마크 코드·결과. 엔진은 만든 Jetson·TensorRT 버전에서만 동작하므로 다른 장비에서는 `convert_trt.sh`로 다시 만든다 |
 | `demo_video/` | 시연 영상 |
 | `docs/` | 최종 제출 문서 |
 
