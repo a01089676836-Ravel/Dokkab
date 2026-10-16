@@ -31,9 +31,7 @@ conveyor_dashboard/.venv/bin/python conveyor_dashboard/launcher.py   # 종료 �
 | `evaluate_model.py` | 성능 평가 (Accuracy, Precision/Recall/F1, FPS) |
 | `evaluate_web.py` | 같은 평가를 브라우저 버튼으로 진행 (Jetson에 모니터가 없을 때, `http://<Jetson IP>:5090`) |
 | `eval_results/` | 현장 평가 결과 (`frames.csv`, `metrics.md`) |
-| `yunet_distance_calibration.py` | 정답 거리 보정 데이터 수집 도구 |
-| `RYG_face_distance_detection.py` | 원본 YuNet 거리 표시 코드 |
-| `optimization/` | TensorRT 변환 스크립트·엔진·벤치마크 |
+| `optimization/` | TensorRT 변환 스크립트(`convert_trt.sh`), 빌드 로그, 벤치마크 코드·결과. 엔진 파일은 장비마다 다시 만들어야 해서 저장소에 넣지 않았다 |
 | `demo_video/` | 시연 영상 |
 | `docs/` | 최종 제출 문서 |
 
@@ -41,7 +39,6 @@ conveyor_dashboard/.venv/bin/python conveyor_dashboard/launcher.py   # 종료 �
 
 | 문서 | 내용 |
 |---|---|
-| [프로젝트 계획서 (수정본)](docs/00_프로젝트계획서_수정본.md) | 센서·서보 제외 등 변경 반영 |
 | [문제정의서](docs/01_문제정의서.md) | 현장 문제, 사용자, 입력·출력, 성공 기준 |
 | [데이터셋 설명서](docs/02_데이터셋_설명서.md) | 사전학습 모델 정보, 운영 로그 수집·라벨 기준·분할 |
 | [모델 평가서](docs/03_모델_평가서.md) | 공개 지표, 상태 안정성, 오탐·미탐 사례, 현장 정량 평가(Accuracy·F1·FPS) 방법 |
@@ -49,7 +46,7 @@ conveyor_dashboard/.venv/bin/python conveyor_dashboard/launcher.py   # 종료 �
 | [DB 구조](docs/05_DB_구조.md) | 테이블, 기록 시점, 조회 방식 |
 | [통합 시연](docs/06_통합_시연.md) | AI 판단 → 장치 반응 → DB 기록 시나리오 |
 | [시연 영상](demo_video/conveyor_demo.mp4) | 31초, 대시보드 + 실제 LED·벨트, 자막 |
-| [발표자료 (PPT)](docs/발표자료.pptx) / [PDF](docs/발표자료.pdf) | 18장, PPT에는 시연 영상 포함 |
+| [발표자료 (PPT)](docs/최종_발표자료.pptx) | 18장, 시연 영상 포함 |
 | [결과보고서](docs/07_결과보고서.md) | 결과(영역별 포함), 문제 해결, 한계, 개선 방향 |
 | [최적화 모델](docs/10_최적화_모델.md) | YuNet ONNX → TensorRT FP32·FP16 엔진 변환 절차 (`optimization/`) |
 | [벤치마크 결과](docs/11_벤치마크_결과.md) | 최적화 전후 지연·FPS·CPU·메모리·결과 일치율 |
