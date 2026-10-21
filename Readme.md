@@ -46,7 +46,7 @@ conveyor_dashboard/.venv/bin/python conveyor_dashboard/launcher.py   # 종료 �
 | [DB 구조](docs/05_DB_구조.md) | 테이블, 기록 시점, 조회 방식 |
 | [통합 시연](docs/06_통합_시연.md) | AI 판단 → 장치 반응 → DB 기록 시나리오 |
 | [시연 영상](demo_video/conveyor_demo.mp4) | 31초, 대시보드 + 실제 LED·벨트, 자막 |
-| [발표자료 (PPT)](docs/최종_발표자료.pptx) | 18장, 시연 영상 포함 |
+| [발표자료 (PPT)](docs/발표자료.pptx) | 11장, 시연 영상 포함 |
 | [결과보고서](docs/07_결과보고서.md) | 결과(영역별 포함), 문제 해결, 한계, 개선 방향 |
 | [최적화 모델](docs/10_최적화_모델.md) | YuNet ONNX → TensorRT FP32·FP16 엔진 변환 절차 (`optimization/`) |
 | [벤치마크 결과](docs/11_벤치마크_결과.md) | 최적화 전후 지연·FPS·CPU·메모리·결과 일치율 |
